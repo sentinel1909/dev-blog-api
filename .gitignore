@@ -1,0 +1,13 @@
+# shuttle-template-axum gitignore configuration
+
+# VS Code settings
+.vscode
+
+# Build artifacts
+public
+target
+
+# Shuttle configuration and environment variables
+.shuttle*
+Secrets*.toml
+/target
