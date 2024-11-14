@@ -4,10 +4,12 @@
 .vscode
 
 # Build artifacts
-public
 target
 
 # Shuttle configuration and environment variables
 .shuttle*
 Secrets*.toml
-/target
+
+# SQLite database
+*.db
+dev-blog-api-db
