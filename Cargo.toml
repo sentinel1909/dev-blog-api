@@ -1,6 +1,6 @@
 [package]
 name = "dev-blog-api"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "The API which supports my developer blog, jeff-mitchell.dev"
 readme = "README.md"
@@ -20,6 +20,7 @@ path = "src/lib/lib.rs"
 axum = "0.7.7"
 http = "1.1.0"
 libsql = "0.3.1"
+reqwest = "0.12.9"
 serde = { version = "1.0.214", features = ["derive"] }
 shuttle-axum = "0.49.0"
 shuttle-runtime = { version = "0.49.0", default-features = false  }

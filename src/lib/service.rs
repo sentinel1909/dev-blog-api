@@ -4,8 +4,11 @@
 use crate::routes::{health_check, openapi};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
+use libsql::Database;
+use reqwest::Client;
 use shuttle_runtime::{Error, Service};
 use std::net::SocketAddr;
+use std::sync::Arc;
 use tower::layer::Layer;
 use tower::ServiceBuilder;
 use tower_http::{
@@ -18,12 +21,23 @@ use tracing::Level;
 
 // struct type to represent the server service
 pub struct DevBlogApiService {
-    pub app_router: Router,
+    pub service_router: Router,
+    pub service_state: AppState,
 }
 
-// methods for the ShuttleTemplateAxum type
+// struct type to represent application state
+pub struct AppState {
+    pub service_http_client: Client,
+    pub service_db: Arc<Database>,
+}
+
+// methods for the DevBlogApiService  type
 impl DevBlogApiService {
-    pub fn build() -> Router {
+    pub fn build_http_client() -> Client {
+        Client::new()
+    }
+
+    pub fn build_router(api_db: Arc<Database>) -> Router {
         // define the tracing layer
         let trace_layer = TraceLayer::new_for_http()
             .make_span_with(
@@ -41,6 +55,7 @@ impl DevBlogApiService {
         let api_routes = Router::new()
             .route("/health_check", get(health_check))
             .route("/docs/openapi.json", get(openapi))
+            .with_state(api_db)
             .layer(cors)
             .layer(
                 ServiceBuilder::new()
@@ -60,11 +75,11 @@ impl DevBlogApiService {
     }
 }
 
-// implement the Shuttle Service trait ont he NasaImageryViewerService type
+// implement the Shuttle Service trait on the DevBlogApiService type
 #[shuttle_runtime::async_trait]
 impl Service for DevBlogApiService {
     async fn bind(self, addr: SocketAddr) -> Result<(), Error> {
-        let router = self.app_router;
+        let router = self.service_router;
 
         axum::serve(tokio::net::TcpListener::bind(addr).await?, router).await?;
 
