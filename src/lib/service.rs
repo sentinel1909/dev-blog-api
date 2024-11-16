@@ -1,11 +1,11 @@
 // src/lib/service.rs
 
 // dependencies
-use crate::routes::{health_check, openapi};
+use crate::config::ServiceConfig;
+use crate::routes::{index::get_index, health_check, openapi};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
-use reqwest::Client;
 use shuttle_runtime::{Error, Service};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -15,6 +15,7 @@ use tower_http::{
     cors::{Any, CorsLayer},
     normalize_path::NormalizePathLayer,
     request_id::{PropagateRequestIdLayer, SetRequestIdLayer},
+    services::ServeDir,
     trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
@@ -22,22 +23,18 @@ use tracing::Level;
 // struct type to represent the server service
 pub struct DevBlogApiService {
     pub service_router: Router,
-    pub service_state: AppState,
 }
 
 // struct type to represent application state
-pub struct AppState {
-    pub service_http_client: Client,
+#[derive(Clone)]
+pub struct ServiceState {
+    pub service_config: ServiceConfig,
     pub service_db: Arc<Database>,
 }
 
 // methods for the DevBlogApiService  type
 impl DevBlogApiService {
-    pub fn build_http_client() -> Client {
-        Client::new()
-    }
-
-    pub fn build_router(api_db: Arc<Database>) -> Router {
+    pub fn build_router(state: ServiceState) -> Router {
         // define the tracing layer
         let trace_layer = TraceLayer::new_for_http()
             .make_span_with(
@@ -50,12 +47,18 @@ impl DevBlogApiService {
         // define a layer to handle CORS (Cross Origin Resource Sharing)
         let cors = CorsLayer::new().allow_methods(Any).allow_origin(Any);
 
+        // create template assets, wrap them in a trace layer
+        let template_assets_service = ServiceBuilder::new()
+            .layer(&trace_layer)
+            .service(ServeDir::new("templates"));
+
         // build the router and wrap it with CORS and the telemetry layers
         let x_request_id = HeaderName::from_static("x-request-id");
         let api_routes = Router::new()
+            .route("/home", get(get_index))
             .route("/health_check", get(health_check))
             .route("/docs/openapi.json", get(openapi))
-            .with_state(api_db)
+            .with_state(state)
             .layer(cors)
             .layer(
                 ServiceBuilder::new()
@@ -71,7 +74,9 @@ impl DevBlogApiService {
         let api_router = NormalizePathLayer::trim_trailing_slash().layer(api_routes);
 
         // combine the api and asset routes to make the complete router
-        Router::new().nest_service("/api", api_router)
+        Router::new()
+            .nest_service("/api", api_router)
+            .nest_service("/", template_assets_service)
     }
 }
 

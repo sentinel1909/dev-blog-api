@@ -1,3 +1,8 @@
 # Shuttle Configuration for the shuttle-template-axum repo
 
 name = "dev-blog-api"
+
+[build]
+assets = [
+  "templates/*"
+]
