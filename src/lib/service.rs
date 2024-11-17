@@ -2,7 +2,7 @@
 
 // dependencies
 use crate::config::ServiceConfig;
-use crate::routes::{index::get_index, health_check, openapi};
+use crate::routes::{health_check, index::get_index, openapi};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
@@ -52,6 +52,11 @@ impl DevBlogApiService {
             .layer(&trace_layer)
             .service(ServeDir::new("templates"));
 
+        // create assets, wrap them in a trace layer
+        let assets_service = ServiceBuilder::new()
+            .layer(&trace_layer)
+            .service(ServeDir::new("assets"));
+
         // build the router and wrap it with CORS and the telemetry layers
         let x_request_id = HeaderName::from_static("x-request-id");
         let api_routes = Router::new()
@@ -75,8 +80,9 @@ impl DevBlogApiService {
 
         // combine the api and asset routes to make the complete router
         Router::new()
-            .nest_service("/api", api_router)
             .nest_service("/", template_assets_service)
+            .nest_service("/assets", assets_service)
+            .nest_service("/api", api_router)
     }
 }
 
