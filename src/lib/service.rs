@@ -6,6 +6,7 @@ use crate::routes::{health_check, index::get_index, openapi};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
+use opendal::Operator;
 use shuttle_runtime::{Error, Service};
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -30,6 +31,7 @@ pub struct DevBlogApiService {
 pub struct ServiceState {
     pub service_config: ServiceConfig,
     pub service_db: Arc<Database>,
+    pub service_storage: Operator,
 }
 
 // methods for the DevBlogApiService  type

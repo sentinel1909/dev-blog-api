@@ -1,7 +1,7 @@
 // src/lib/config.rs
 
 // dependencies
-use anyhow::{Context, Result};
+use anyhow::Result;
 use shuttle_runtime::SecretStore;
 
 // struct type to represent the app configuration

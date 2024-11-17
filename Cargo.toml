@@ -1,6 +1,6 @@
 [package]
 name = "dev-blog-api"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2021"
 description = "The API which supports my developer blog, jeff-mitchell.dev"
 readme = "README.md"
@@ -22,8 +22,10 @@ axum = "0.7.9"
 http = "1.1.0"
 libsql = "0.3.1"
 once_cell = "1.20.2"
+opendal = "0.45.0"
 serde = { version = "1.0.214", features = ["derive"] }
 shuttle-axum = "0.49.0"
+shuttle-opendal = "0.49.0"
 shuttle-runtime = { version = "0.49.0", default-features = false  }
 shuttle-turso = "0.49.0"
 tera = "1.20.0"

@@ -5,6 +5,8 @@ use dev_blog_api_lib::config::ServiceConfig;
 use dev_blog_api_lib::service::{DevBlogApiService, ServiceState};
 use dev_blog_api_lib::telemetry::{get_subscriber, init_subscriber};
 use libsql::Database;
+use opendal::Operator;
+use shuttle_opendal::Opendal;
 use shuttle_runtime::{CustomError, Error, SecretStore, Secrets};
 use shuttle_turso::Turso;
 use std::sync::Arc;
@@ -13,16 +15,17 @@ use std::sync::Arc;
 #[shuttle_runtime::main]
 async fn main(
     #[Turso(addr = "{secrets.TURSO_DB_ADDR}", token = "{secrets.TURSO_DB_TOKEN}")]
-    db_client: Database,
+    client: Database,
     #[Secrets] secrets: SecretStore,
+    #[Opendal(scheme="s3")] storage: Operator,
 ) -> Result<DevBlogApiService, Error> {
     // initialize tracing
     let subscriber = get_subscriber("dev-blog-api".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
 
     // configure the returned Turso database client and run initial migrations to create the posts table
-    let db_client = Arc::new(db_client);
-    let conn = db_client.connect().map_err(|err| {
+    let client = Arc::new(client);
+    let conn = client.connect().map_err(|err| {
         let error_msg = format!("Unable to connect to the database: {}", err);
         CustomError::new(err).context(error_msg)
     })?;
@@ -42,7 +45,8 @@ async fn main(
     // build the service state, which includes the configuration and Turso database client
     let service_state = ServiceState {
         service_config: config,
-        service_db: db_client,
+        service_db: client,
+        service_storage: storage,
     };
 
     // build the router
