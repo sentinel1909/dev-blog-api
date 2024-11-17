@@ -14,7 +14,10 @@ pub fn get_templates() -> Result<&'static Tera, ApiError> {
         let mut base_template =
             Tera::new("templates/**/*").map_err(|err| ApiError::Internal(err.to_string()))?;
         base_template
-            .add_template_file("templates/base.html", None)
+            .add_template_files(vec![
+                ("templates/base.html", Some("base")),
+                ("templates/home.html", Some("home")),
+            ])
             .map_err(|err| ApiError::Internal(err.to_string()))?;
         Ok(base_template)
     })

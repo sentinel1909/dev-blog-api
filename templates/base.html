@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="/assets/screen.css" media="screen" />
-  <title>Document</title>
-</head>
-<body>
-  <h1>Hello, world!</h1> 
-</body>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
+    </style>
+    <link href="/assets/screen.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/favicon.ico" rel="icon" type="image/x-icon" />
+    <title>jeff-mitchell.dev API | Home</title>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>jeff-mitchell.dev API</h1>
+        {% block header %} {% endblock %}
+      </header>
+      <main class="content">{% block content %} {% endblock %}</main>
+      <footer class="footer">
+        <p>
+          &copy; <span id="year"></span>
+          Jeffery D. Mitchell | All Rights Reserved
+        </p>
+        <p>
+          Proudly built with Rust and hosted on:
+          <a href="https://shuttle.dev" target="_blank">Shuttle</a>
+        </p>
+      </footer>
+    </div>
+    <script src="/assets/scripts.js"></script>
+  </body>
 </html>

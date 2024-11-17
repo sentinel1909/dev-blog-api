@@ -2,7 +2,7 @@
 
 // dependencies
 use crate::config::ServiceConfig;
-use crate::routes::{health_check, index::get_index, openapi};
+use crate::routes::{health_check, home::get_home, openapi};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
@@ -62,7 +62,7 @@ impl DevBlogApiService {
         // build the router and wrap it with CORS and the telemetry layers
         let x_request_id = HeaderName::from_static("x-request-id");
         let api_routes = Router::new()
-            .route("/home", get(get_index))
+            .route("/home", get(get_home))
             .route("/health_check", get(health_check))
             .route("/docs/openapi.json", get(openapi))
             .with_state(state)

@@ -2,10 +2,10 @@
 
 // module declarations
 pub mod health;
-pub mod index;
+pub mod home;
 pub mod openapi;
 
 // re-exports
 pub use health::*;
-pub use index::*;
+pub use home::*;
 pub use openapi::*;

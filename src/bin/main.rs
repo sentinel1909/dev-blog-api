@@ -14,10 +14,9 @@ use std::sync::Arc;
 // main function; configures tracing, builds the app router, starts the service
 #[shuttle_runtime::main]
 async fn main(
-    #[Turso(addr = "{secrets.TURSO_DB_ADDR}", token = "{secrets.TURSO_DB_TOKEN}")]
-    client: Database,
+    #[Turso(addr = "{secrets.TURSO_DB_ADDR}", token = "{secrets.TURSO_DB_TOKEN}")] client: Database,
     #[Secrets] secrets: SecretStore,
-    #[Opendal(scheme="s3")] storage: Operator,
+    #[Opendal(scheme = "s3")] storage: Operator,
 ) -> Result<DevBlogApiService, Error> {
     // initialize tracing
     let subscriber = get_subscriber("dev-blog-api".into(), "info".into(), std::io::stdout);
