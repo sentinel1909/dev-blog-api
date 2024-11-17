@@ -4,5 +4,6 @@ name = "dev-blog-api"
 
 [build]
 assets = [
+  "assets/*",
   "templates/*"
 ]
