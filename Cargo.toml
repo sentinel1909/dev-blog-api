@@ -1,6 +1,6 @@
 [package]
 name = "dev-blog-api"
-version = "0.9.0"
+version = "1.0.0"
 edition = "2021"
 description = "The API which supports my developer blog, jeff-mitchell.dev"
 readme = "README.md"

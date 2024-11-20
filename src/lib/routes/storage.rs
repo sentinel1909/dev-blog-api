@@ -9,8 +9,9 @@ use serde::Serialize;
 
 // struct type to represent the /health_check endpoint response
 #[derive(Serialize)]
-struct StorageCheckResponse {
+struct StorageResponse {
     status: String,
+    contents: Option<Vec<String>>,
 }
 
 // storage check handler; if no errors are returned from the check, a 200 OK response with empty body is returned,
@@ -24,9 +25,31 @@ pub async fn storage_check(
         ApiError::Internal(err.to_string())
     })?;
 
-    let response = StorageCheckResponse {
+    let response = StorageResponse {
         status: "ok".to_string(),
+        contents: None,
     };
 
     Ok((StatusCode::OK, Json(response)))
 }
+
+// storage list handler
+#[debug_handler]
+pub async fn storage_list(
+    State(state): State<ServiceState>,
+) -> Result<impl IntoResponse, ApiError> {
+    let entries = state.service_storage.list_with("/").recursive(true).await.map_err(|err| {
+        tracing::error!("Unable to list items in the bucket: {}", err);
+        ApiError::Internal(err.to_string())
+    })?;
+
+   let items: Vec<String> = entries.into_iter().map(|entry| entry.path().to_string()).collect(); 
+
+    let response = StorageResponse {
+        status: "ok".to_string(),
+        contents: Some(items),
+    };
+
+    Ok((StatusCode::OK, Json(response)))
+}
+

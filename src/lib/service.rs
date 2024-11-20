@@ -2,7 +2,7 @@
 
 // dependencies
 use crate::config::ServiceConfig;
-use crate::routes::{health_check, home::get_home, openapi, storage::storage_check};
+use crate::routes::{health_check, home::get_home, openapi, storage::{storage_check, storage_list}};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
@@ -65,6 +65,7 @@ impl DevBlogApiService {
             .route("/home", get(get_home))
             .route("/health_check", get(health_check))
             .route("/storage_check", get(storage_check))
+            .route("/storage_list", get(storage_list))
             .route("/docs/openapi.json", get(openapi))
             .with_state(state)
             .layer(cors)
