@@ -217,6 +217,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-macros"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57d123550fa8d071b7255cb0cc04dc302baa6c8c4a79f55701552684d8399bce"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
+]
+
+[[package]]
 name = "backon"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -633,10 +644,11 @@ checksum = "339544cc9e2c4dc3fc7149fd630c5f22263a4fdf18a98afd0075784968b5cf00"
 
 [[package]]
 name = "dev-blog-api"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "axum 0.7.9",
+ "axum-macros",
  "http 1.1.0",
  "libsql",
  "once_cell",

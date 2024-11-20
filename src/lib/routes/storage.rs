@@ -1,8 +1,10 @@
 // src/lib/routes/storage.rs
 
 // dependencies
+use crate::error::ApiError;
 use crate::service::ServiceState;
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum_macros::debug_handler;
 use serde::Serialize;
 
 // struct type to represent the /health_check endpoint response
@@ -12,13 +14,19 @@ struct StorageCheckResponse {
 }
 
 // storage check handler; if no errors are returned from the check, a 200 OK response with empty body is returned,
-// otherwise the error message is returned 
-pub async fn storage_check(State(state): State<ServiceState>) -> impl IntoResponse {
-    let op = state.service_storage.check().await;
-    let response = match op {
-        Ok(_) => StorageCheckResponse { status: "ok".to_string() },
-        Err(e) => StorageCheckResponse { status: e.to_string() },
+// otherwise the error message is returned
+#[debug_handler]
+pub async fn storage_check(
+    State(state): State<ServiceState>,
+) -> Result<impl IntoResponse, ApiError> {
+    state.service_storage.check().await.map_err(|err| {
+        tracing::error!("Storage check failed: {}", err);
+        ApiError::Internal(err.to_string())
+    })?;
+
+    let response = StorageCheckResponse {
+        status: "ok".to_string(),
     };
 
-    (StatusCode::OK, Json(response))
+    Ok((StatusCode::OK, Json(response)))
 }
