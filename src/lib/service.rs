@@ -61,7 +61,7 @@ impl DevBlogApiService {
 
         // build the router and wrap it with CORS and the telemetry layers
         let x_request_id = HeaderName::from_static("x-request-id");
-        let api_routes = Router::new()
+        let public_routes = Router::new()
             .route("/home", get(get_home))
             .route("/health_check", get(health_check))
             .route("/storage_check", get(storage_check))
@@ -80,13 +80,13 @@ impl DevBlogApiService {
             );
 
         // wrap the API routes with Normalize Path Layer
-        let api_router = NormalizePathLayer::trim_trailing_slash().layer(api_routes);
+        let api_router = NormalizePathLayer::trim_trailing_slash().layer(public_routes);
 
         // combine the api and asset routes to make the complete router
         Router::new()
             .nest_service("/", template_assets_service)
             .nest_service("/assets", assets_service)
-            .nest_service("/api", api_router)
+            .nest_service("/public", api_router)
     }
 }
 
