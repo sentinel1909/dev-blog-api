@@ -12,7 +12,7 @@ struct ApiDoc;
 // return JSON version of an OpenAPI schema
 #[utoipa::path(
   get,
-  path = "/api/docs/openapi.json",
+  path = "/public/docs/openapi.json",
   responses(
     (status = 200, description = "JSON file", body = ())
   )
