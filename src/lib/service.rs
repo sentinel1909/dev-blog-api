@@ -2,7 +2,12 @@
 
 // dependencies
 use crate::config::ServiceConfig;
-use crate::routes::{health_check, home::get_home, openapi, storage::{storage_check, storage_list}};
+use crate::routes::{
+    health_check,
+    home::get_home,
+    openapi,
+    storage::{storage_check, storage_list},
+};
 use crate::telemetry::MakeRequestUuid;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;

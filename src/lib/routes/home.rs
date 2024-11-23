@@ -15,6 +15,7 @@ fn build_home_template() -> Result<String, ApiError> {
 }
 
 // index route handler, returns the index template so that it can be rendered by the browser
+#[tracing::instrument(name = "Get home page")]
 pub async fn get_home() -> impl IntoResponse {
     match build_home_template() {
         Ok(template) => Html(template),

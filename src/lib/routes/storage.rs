@@ -17,6 +17,7 @@ struct StorageResponse {
 // storage check handler; if no errors are returned from the check, a 200 OK response with empty body is returned,
 // otherwise the error message is returned
 #[debug_handler]
+#[tracing::instrument(name = "Storage Check", skip(state))]
 pub async fn storage_check(
     State(state): State<ServiceState>,
 ) -> Result<impl IntoResponse, ApiError> {
@@ -35,15 +36,24 @@ pub async fn storage_check(
 
 // storage list handler
 #[debug_handler]
+#[tracing::instrument(name = "Storage List", skip(state))]
 pub async fn storage_list(
     State(state): State<ServiceState>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let entries = state.service_storage.list_with("/").recursive(true).await.map_err(|err| {
-        tracing::error!("Unable to list items in the bucket: {}", err);
-        ApiError::Internal(err.to_string())
-    })?;
+    let entries = state
+        .service_storage
+        .list_with("/")
+        .recursive(true)
+        .await
+        .map_err(|err| {
+            tracing::error!("Unable to list items in the bucket: {}", err);
+            ApiError::Internal(err.to_string())
+        })?;
 
-   let items: Vec<String> = entries.into_iter().map(|entry| entry.path().to_string()).collect(); 
+    let items: Vec<String> = entries
+        .into_iter()
+        .map(|entry| entry.path().to_string())
+        .collect();
 
     let response = StorageResponse {
         status: "ok".to_string(),
@@ -52,4 +62,3 @@ pub async fn storage_list(
 
     Ok((StatusCode::OK, Json(response)))
 }
-
