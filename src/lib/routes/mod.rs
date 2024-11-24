@@ -3,6 +3,7 @@
 // module declarations
 pub mod health;
 pub mod home;
+pub mod login;
 pub mod openapi;
 pub mod storage;
 

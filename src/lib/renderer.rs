@@ -17,6 +17,7 @@ pub fn get_templates() -> Result<&'static Tera, ApiError> {
             .add_template_files(vec![
                 ("templates/base.html", Some("base")),
                 ("templates/home.html", Some("home")),
+                ("templates/login.html", Some("login")),
             ])
             .map_err(|err| ApiError::Internal(err.to_string()))?;
         Ok(base_template)

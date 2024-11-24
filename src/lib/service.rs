@@ -5,6 +5,7 @@ use crate::config::ServiceConfig;
 use crate::routes::{
     health_check,
     home::get_home,
+    login::get_login_form,
     openapi,
     storage::{storage_check, storage_list},
 };
@@ -68,6 +69,7 @@ impl DevBlogApiService {
         let x_request_id = HeaderName::from_static("x-request-id");
         let public_routes = Router::new()
             .route("/home", get(get_home))
+            .route("/login", get(get_login_form))
             .route("/health_check", get(health_check))
             .route("/storage_check", get(storage_check))
             .route("/storage_list", get(storage_list))
