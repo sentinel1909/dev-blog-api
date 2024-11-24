@@ -10,12 +10,14 @@ use crate::routes::{
     storage::{storage_check, storage_list},
 };
 use crate::telemetry::MakeRequestUuid;
+use anyhow::Result;
 use axum::{http::HeaderName, routing::get, Router};
 use libsql::Database;
 use opendal::Operator;
 use shuttle_runtime::{Error, Service};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use tokio::net::TcpListener;
 use tower::layer::Layer;
 use tower::ServiceBuilder;
 use tower_http::{
@@ -28,9 +30,7 @@ use tower_http::{
 use tracing::Level;
 
 // struct type to represent the server service
-pub struct DevBlogApiService {
-    pub service_router: Router,
-}
+pub struct DevBlogApplication(pub Router);
 
 // struct type to represent application state
 #[derive(Clone)]
@@ -41,8 +41,8 @@ pub struct ServiceState {
 }
 
 // methods for the DevBlogApiService  type
-impl DevBlogApiService {
-    pub fn build_router(state: ServiceState) -> Router {
+impl DevBlogApplication {
+    pub fn build(state: ServiceState) -> Result<DevBlogApplication> {
         // define the tracing layer
         let trace_layer = TraceLayer::new_for_http()
             .make_span_with(
@@ -90,18 +90,26 @@ impl DevBlogApiService {
         let api_router = NormalizePathLayer::trim_trailing_slash().layer(public_routes);
 
         // combine the api and asset routes to make the complete router
-        Router::new()
+        let app = Router::new()
             .nest_service("/", template_assets_service)
             .nest_service("/assets", assets_service)
-            .nest_service("/public", api_router)
+            .nest_service("/public", api_router);
+
+        Ok(Self(app))
+    }
+
+    // function to run the application in tests
+    pub async fn run_until_stopped(self, addr: SocketAddr) {
+        let listener = TcpListener::bind(addr).await.unwrap();
+        axum::serve(listener, self.0).await.unwrap();
     }
 }
 
 // implement the Shuttle Service trait on the DevBlogApiService type
 #[shuttle_runtime::async_trait]
-impl Service for DevBlogApiService {
+impl Service for DevBlogApplication {
     async fn bind(self, addr: SocketAddr) -> Result<(), Error> {
-        let router = self.service_router;
+        let router = self.0;
 
         axum::serve(tokio::net::TcpListener::bind(addr).await?, router).await?;
 

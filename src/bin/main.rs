@@ -2,7 +2,7 @@
 
 // dependencies
 use dev_blog_api_lib::config::ServiceConfig;
-use dev_blog_api_lib::service::{DevBlogApiService, ServiceState};
+use dev_blog_api_lib::service::{DevBlogApplication, ServiceState};
 use dev_blog_api_lib::telemetry::{get_subscriber, init_subscriber};
 use libsql::Database;
 use opendal::Operator;
@@ -17,7 +17,7 @@ async fn main(
     #[Turso(addr = "{secrets.TURSO_DB_ADDR}", token = "{secrets.TURSO_DB_TOKEN}")] client: Database,
     #[Secrets] secrets: SecretStore,
     #[Opendal(scheme = "s3")] storage: Operator,
-) -> Result<DevBlogApiService, Error> {
+) -> Result<DevBlogApplication, Error> {
     // initialize tracing
     let subscriber = get_subscriber("dev-blog-api".into(), "info".into(), std::io::stdout);
     init_subscriber(subscriber);
@@ -49,8 +49,8 @@ async fn main(
     };
 
     // build the router
-    let service_router = DevBlogApiService::build_router(service_state);
+    let DevBlogApplication(router) = DevBlogApplication::build(service_state)?;
 
     // start the service
-    Ok(DevBlogApiService { service_router })
+    Ok(DevBlogApplication(router))
 }
