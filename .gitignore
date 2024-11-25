@@ -12,4 +12,6 @@ Secrets*.toml
 
 # SQLite database
 *.db
-dev-blog-api-db
+
+# /tmp directory (for testing OpenDAL)
+tmp
