@@ -7,11 +7,17 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use axum_macros::debug_handler;
 use serde::Serialize;
 
-// struct type to represent the /health_check endpoint response
-#[derive(Serialize)]
-struct StorageResponse {
+// struct type to represent the /storage_check endpoint response
+#[derive(Debug, Serialize)]
+struct StorageCheckResponse {
     status: String,
-    contents: Option<Vec<String>>,
+}
+
+// struct type to represent the /storage_list endpoint response
+#[derive(Debug, Serialize)]
+struct StorageListResponse {
+    status: String,
+    content: Option<Vec<String>>,
 }
 
 // storage check handler; if no errors are returned from the check, a 200 OK response with empty body is returned,
@@ -26,9 +32,8 @@ pub async fn storage_check(
         ApiError::Internal(err.to_string())
     })?;
 
-    let response = StorageResponse {
+    let response = StorageCheckResponse {
         status: "ok".to_string(),
-        contents: None,
     };
 
     Ok((StatusCode::OK, Json(response)))
@@ -46,7 +51,7 @@ pub async fn storage_list(
         .recursive(true)
         .await
         .map_err(|err| {
-            tracing::error!("Unable to list items in the bucket: {}", err);
+            tracing::error!("Storage check failed, unable to list items in the bucket: {}", err);
             ApiError::Internal(err.to_string())
         })?;
 
@@ -55,9 +60,9 @@ pub async fn storage_list(
         .map(|entry| entry.path().to_string())
         .collect();
 
-    let response = StorageResponse {
+    let response = StorageListResponse {
         status: "ok".to_string(),
-        contents: Some(items),
+        content: Some(items),
     };
 
     Ok((StatusCode::OK, Json(response)))
