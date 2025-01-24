@@ -14,4 +14,4 @@ Secrets*.toml
 *.db
 
 # /tmp directory (for testing OpenDAL)
-tmp
+dev_blog_testing

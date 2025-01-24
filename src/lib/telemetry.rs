@@ -1,7 +1,7 @@
 // src/lib/telemetry.rs
 
 // dependencies
-use http::Request;
+use axum::http::Request;
 use tower_http::request_id::{MakeRequestId, RequestId};
 use tracing::subscriber::set_global_default;
 use tracing::Subscriber;

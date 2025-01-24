@@ -91,9 +91,9 @@ impl DevBlogApplication {
 
         // combine the api and asset routes to make the complete router
         let app = Router::new()
-            .nest_service("/", template_assets_service)
             .nest_service("/assets", assets_service)
-            .nest_service("/public", api_router);
+            .nest_service("/public", api_router)
+            .fallback_service(template_assets_service);
 
         Ok(Self(app))
     }

@@ -28,8 +28,8 @@ pub async fn spawn_app() -> TestApp {
         .expect("Unable to build a local database for testing.");
 
     // configure OpenDAL to use local storage for testing
-    let mut builder = Fs::default();
-    builder.root("c:/Users/jeff/Development/tmp_testing");
+    let builder = Fs::default()
+        .root("dev_blog_testing/content");
     let op = Operator::new(builder).unwrap().finish();
     op.create_dir("storage_check/")
         .await
