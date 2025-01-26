@@ -7,7 +7,7 @@ use crate::routes::{
     home::get_home,
     login::get_login_form,
     openapi,
-    storage::{storage_check, storage_list},
+    storage::{storage_check, storage_list, storage_read},
 };
 use crate::telemetry::MakeRequestUuid;
 use anyhow::Result;
@@ -73,6 +73,7 @@ impl DevBlogApplication {
             .route("/health_check", get(health_check))
             .route("/storage_check", get(storage_check))
             .route("/storage_list", get(storage_list))
+            .route("/storage_read", get(storage_read))
             .route("/docs/openapi.json", get(openapi))
             .with_state(state)
             .layer(cors)

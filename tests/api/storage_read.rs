@@ -1,11 +1,11 @@
-// tests/api/storage_check.rs
+// tests/api/storage_read.rs
 
 // dependencies
 use crate::helpers::{create_db, migrate_db, spawn_app};
 use serde_json::{json, Value};
 
 #[tokio::test]
-async fn storage_check_returns_200_ok() {
+async fn storage_read_returns_200_ok_and_content_from_each_file() {
     // Arrange
     let db = create_db()
         .await
@@ -18,7 +18,7 @@ async fn storage_check_returns_200_ok() {
     // Act
     let response = app
         .api_client
-        .get(format!("{}/public/storage_check", &app.address))
+        .get(format!("{}/public/storage_read", &app.address))
         .send()
         .await
         .expect("Failed to execute request");
@@ -31,6 +31,7 @@ async fn storage_check_returns_200_ok() {
         .expect("Failed to parse JSON from response body.");
     let expected_body = json!({
       "status": "ok",
+      "posts": ["---\ntitle: \"Second Test Post\"\ndate: \"2025-01-26\"\nslug: \"second-test-post\"\ncategory: \"test\"\ntag: \"test\"\nsummary: \"This is the summary of the second test post.\"\ndraft: true\nedited: false\n---\n\n# Second Test Post\n\nThis is the second test post.\n", "---\ntitle: \"Test Post\"\ndate: \"2025-01-26\"\nslug: \"test-post\"\ncategory: \"test\"\ntag: \"test\"\nsummary: \"This is the summary of the test post.\"\ndraft: true\nedited: false\n---\n\n# Test Post\n\nThis is a test post.\n"]
     });
     assert_eq!(response_body, expected_body);
 }
