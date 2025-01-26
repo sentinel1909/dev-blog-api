@@ -3,7 +3,7 @@
 use dev_blog_api_lib::ServiceState;
 // dependencies
 use dev_blog_api_lib::{config::ServiceConfig, DevBlogApplication};
-use libsql::Builder;
+use libsql::{Builder, Database, Error};
 use opendal::services::Fs;
 use opendal::Operator;
 use reqwest::Client;
@@ -11,25 +11,36 @@ use std::net::TcpListener;
 use std::sync::Arc;
 
 // struct type which models a test application
+#[allow(dead_code)]
 pub struct TestApp {
     pub address: String,
     pub port: u16,
     pub api_client: Client,
+    pub service_state: ServiceState,
 }
 
-pub async fn spawn_app() -> TestApp {
+// helper function to create and return a database for testing
+pub async fn create_db() -> Result<Database, Error> {
+    Builder::new_local(":memory:").build().await
+}
+
+// helper function to do the migrations on the testing database
+pub async fn migrate_db(state: ServiceState) -> Result<(), Error> {
+    let conn = state.service_db.connect()?;
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS articles(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL UNIQUE, date TEXT NOT NULL, slug TEXT NOT NULL, category TEXT NOT NULL, tag TEXT NOT NULL, summary TEXT NOT NULL, content TEXT NOT NULL);",
+        (),
+    )
+    .await?;
+    Ok(())
+}
+
+pub async fn spawn_app(db: Database) -> TestApp {
     // build the app test configuration
     let config = ServiceConfig {};
 
-    // build a local database for testing
-    let db = Builder::new_local("dev-blog-api-local.db")
-        .build()
-        .await
-        .expect("Unable to build a local database for testing.");
-
-    // configure OpenDAL to use local storage for testing
-    let builder = Fs::default()
-        .root("dev_blog_testing/content");
+    // configure a local directory for testing storage
+    let builder = Fs::default().root("dev_blog_testing/content");
     let op = Operator::new(builder).unwrap().finish();
     op.create_dir("storage_check/")
         .await
@@ -43,7 +54,8 @@ pub async fn spawn_app() -> TestApp {
     };
 
     // build the app for testing
-    let application = DevBlogApplication::build(state).expect("Failed to build the application.");
+    let application =
+        DevBlogApplication::build(state.clone()).expect("Failed to build the application.");
     let listener = TcpListener::bind("localhost:0").expect("Failed to bind port.");
     let addr = listener.local_addr().unwrap();
     let port = addr.port();
@@ -52,11 +64,15 @@ pub async fn spawn_app() -> TestApp {
     tokio::spawn(application.run_until_stopped(addr));
 
     // configure the base, empty API client for testing
-    let client = Client::builder().build().unwrap();
+    let client = Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
 
     TestApp {
         address: format!("http:localhost:{port}"),
         port,
         api_client: client,
+        service_state: state,
     }
 }

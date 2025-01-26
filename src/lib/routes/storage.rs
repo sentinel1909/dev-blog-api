@@ -51,7 +51,10 @@ pub async fn storage_list(
         .recursive(true)
         .await
         .map_err(|err| {
-            tracing::error!("Storage check failed, unable to list items in the bucket: {}", err);
+            tracing::error!(
+                "Storage check failed, unable to list items in the bucket: {}",
+                err
+            );
             ApiError::Internal(err.to_string())
         })?;
 
