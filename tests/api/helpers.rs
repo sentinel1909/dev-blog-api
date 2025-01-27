@@ -25,7 +25,7 @@ pub async fn create_db() -> Result<Database, Error> {
 }
 
 // helper function to do the migrations on the testing database
-pub async fn migrate_db(state: ServiceState) -> Result<(), Error> {
+pub async fn migrate_db(state: &ServiceState) -> Result<(), Error> {
     let conn = state.service_db.connect()?;
     conn.execute(
         "CREATE TABLE IF NOT EXISTS articles(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL UNIQUE, date TEXT NOT NULL, slug TEXT NOT NULL, category TEXT NOT NULL, tag TEXT NOT NULL, summary TEXT NOT NULL, content TEXT NOT NULL);",
@@ -35,16 +35,17 @@ pub async fn migrate_db(state: ServiceState) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn spawn_app(db: Database) -> TestApp {
+// helper function to create local storage for testing
+pub async fn create_storage() -> Result<Operator, opendal::Error> {
+    let builder = Fs::default().root("dev_blog_testing");
+    let op = Operator::new(builder).unwrap().finish();
+    op.create_dir("content/").await?;
+    Ok(op)
+}
+
+pub async fn spawn_app(db: Database, op: Operator) -> TestApp {
     // build the app test configuration
     let config = ServiceConfig {};
-
-    // configure a local directory for testing storage
-    let builder = Fs::default().root("dev_blog_testing/content");
-    let op = Operator::new(builder).unwrap().finish();
-    op.create_dir("storage_check/")
-        .await
-        .expect("Unable to create temporary directory for testing.");
 
     // configure the app state for testing
     let state = ServiceState {

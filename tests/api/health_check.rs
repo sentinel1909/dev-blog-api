@@ -1,7 +1,7 @@
 // tests/api/health_check.rs
 
 // dependencies
-use crate::helpers::{create_db, migrate_db, spawn_app};
+use crate::helpers::{create_db, create_storage, migrate_db, spawn_app};
 use serde_json::{json, Value};
 
 #[tokio::test]
@@ -10,8 +10,11 @@ async fn health_check_works() {
     let db = create_db()
         .await
         .expect("Unable to create an in-memory database for testing.");
-    let app = spawn_app(db).await;
-    migrate_db(app.service_state)
+    let op = create_storage()
+        .await
+        .expect("Unable to create local storage directory for testing.");
+    let app = spawn_app(db, op).await;
+    migrate_db(&app.service_state)
         .await
         .expect("Unable to perform migrations on the test database.");
 

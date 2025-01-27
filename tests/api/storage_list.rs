@@ -1,7 +1,7 @@
 // tests/api/storage_list.rs
 
 // dependencies
-use crate::helpers::{create_db, migrate_db, spawn_app};
+use crate::helpers::{create_db, create_storage, migrate_db, spawn_app};
 use serde_json::{json, Value};
 
 #[tokio::test]
@@ -10,8 +10,11 @@ async fn storage_list_returns_200_ok_and_bucket_contents() {
     let db = create_db()
         .await
         .expect("Unable to create an in-memory database for testing.");
-    let app = spawn_app(db).await;
-    migrate_db(app.service_state)
+    let op = create_storage()
+        .await
+        .expect("Unable to create local storage directory for testing.");
+    let app = spawn_app(db, op).await;
+    migrate_db(&app.service_state)
         .await
         .expect("Unable to perform migrations on the test database.");
 
@@ -31,7 +34,7 @@ async fn storage_list_returns_200_ok_and_bucket_contents() {
         .expect("Failed to parse JSON from response body.");
     let expected_body = json!({
       "status": "ok",
-      "content": ["storage_check/test2.md", "storage_check/test1.md", "storage_check/", "/"],
+      "content": ["content/test2.md", "content/test1.md", "content/test3.md", "content/"],
     });
     assert_eq!(response_body, expected_body);
 }

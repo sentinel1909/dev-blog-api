@@ -3,7 +3,12 @@
 // dependencies
 use crate::error::ApiError;
 use crate::service::ServiceState;
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Multipart, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 use axum_macros::debug_handler;
 use opendal::{Entry, Error};
 use serde::Serialize;
@@ -28,6 +33,12 @@ struct StorageReadResponse {
     posts: Vec<String>,
 }
 
+// struct type to represent the /storage_write endpoint response
+#[derive(Debug, Serialize)]
+struct StorageWriteResponse {
+    status: String,
+}
+
 // storage check handler; if no errors are returned from the check, a 200 OK response with empty body is returned,
 // otherwise the error message is returned
 #[debug_handler]
@@ -49,7 +60,11 @@ pub async fn storage_check(
 
 // utility function which gets all the entries in the bucket
 async fn list(state: &ServiceState) -> Result<Vec<Entry>, Error> {
-    state.service_storage.list_with("/").recursive(true).await
+    state
+        .service_storage
+        .list_with("/content")
+        .recursive(true)
+        .await
 }
 
 // storage list handler
@@ -115,7 +130,8 @@ pub async fn storage_read(
         let content = bytes.to_vec();
         let post = String::from_utf8(content).map_err(|err| {
             tracing::error!(
-                "Storage read failed, unable to convert file contents to a string: {}", err
+                "Storage read failed, unable to convert file contents to a string: {}",
+                err
             );
             ApiError::Internal(err.to_string())
         })?;
@@ -125,6 +141,34 @@ pub async fn storage_read(
     let response = StorageReadResponse {
         status: "ok".to_string(),
         posts,
+    };
+
+    Ok((StatusCode::OK, Json(response)))
+}
+
+// storage write handler
+#[debug_handler]
+#[tracing::instrument(name = "Storage Write", skip(state))]
+pub async fn storage_write(
+    State(state): State<ServiceState>,
+    mut multipart: Multipart,
+) -> Result<impl IntoResponse, ApiError> {
+    while let Some(field) = multipart.next_field().await.unwrap() {
+        let name = field.name().unwrap().to_string();
+        let data = field.bytes().await.unwrap();
+        let path = format!("content/{}", name);
+        state
+            .service_storage
+            .write(&path, data)
+            .await
+            .map_err(|err| {
+                tracing::error!("Storage write failed: {}", err);
+                ApiError::Internal(err.to_string())
+            })?;
+    }
+
+    let response = StorageWriteResponse {
+        status: "ok".to_string(),
     };
 
     Ok((StatusCode::OK, Json(response)))

@@ -6,3 +6,4 @@ mod helpers;
 mod storage_check;
 mod storage_list;
 mod storage_read;
+mod storage_write;

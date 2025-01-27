@@ -7,11 +7,15 @@ use crate::routes::{
     home::get_home,
     login::get_login_form,
     openapi,
-    storage::{storage_check, storage_list, storage_read},
+    storage::{storage_check, storage_list, storage_read, storage_write},
 };
 use crate::telemetry::MakeRequestUuid;
 use anyhow::Result;
-use axum::{http::HeaderName, routing::get, Router};
+use axum::{
+    http::HeaderName,
+    routing::{get, post},
+    Router,
+};
 use libsql::Database;
 use opendal::Operator;
 use shuttle_runtime::{Error, Service};
@@ -74,6 +78,7 @@ impl DevBlogApplication {
             .route("/storage_check", get(storage_check))
             .route("/storage_list", get(storage_list))
             .route("/storage_read", get(storage_read))
+            .route("/storage_write", post(storage_write))
             .route("/docs/openapi.json", get(openapi))
             .with_state(state)
             .layer(cors)

@@ -1,11 +1,12 @@
-// tests/api/storage_check.rs
+// tests/api/storage_write.rs
 
 // dependencies
 use crate::helpers::{create_db, create_storage, migrate_db, spawn_app};
+use reqwest::multipart::{Form, Part};
 use serde_json::{json, Value};
 
 #[tokio::test]
-async fn storage_check_returns_200_ok() {
+async fn storage_write_returns_200_ok() {
     // Arrange
     let db = create_db()
         .await
@@ -18,10 +19,14 @@ async fn storage_check_returns_200_ok() {
         .await
         .expect("Unable to perform migrations on the test database.");
 
+    let test_upload = include_str!("../../dev_blog_testing/upload/test3.md");
+    let form = Form::new().part("test3.md", Part::text(test_upload).file_name("test3.md"));
+
     // Act
     let response = app
         .api_client
-        .get(format!("{}/public/storage_check", &app.address))
+        .post(format!("{}/public/storage_write", &app.address))
+        .multipart(form)
         .send()
         .await
         .expect("Failed to execute request");
