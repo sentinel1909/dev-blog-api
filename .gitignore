@@ -10,8 +10,8 @@
 .shuttle*
 Secrets*.toml
 
-# SQLite database
+# Local SQLite database
 *.db
 
-# /tmp directory (for testing OpenDAL)
+# /dev_blog_testing directory (for testing OpenDAL)
 /dev_blog_testing
