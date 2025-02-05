@@ -1,7 +1,7 @@
 // tests/api/storage_write.rs
 
 // dependencies
-use crate::helpers::{create_db, create_storage, spawn_app};
+use crate::helpers::{cleanup_storage, create_db, create_storage, setup_test_files, spawn_app};
 use reqwest::multipart::{Form, Part};
 use serde_json::{json, Value};
 
@@ -15,6 +15,9 @@ async fn storage_write_returns_200_ok() {
         .await
         .expect("Unable to create local storage directory for testing.");
     let app = spawn_app(db, op).await;
+    setup_test_files(&app.service_state.service_storage)
+        .await
+        .expect("Unable to set up test files.");
 
     let test_upload = include_str!("../../dev_blog_testing/upload/test3.md");
     let form = Form::new().part("test3.md", Part::text(test_upload).file_name("test3.md"));
@@ -39,9 +42,8 @@ async fn storage_write_returns_200_ok() {
     });
     assert_eq!(response_body, expected_body);
 
-    app.service_state
-        .service_storage
-        .delete("content/test3.md")
+    // Clean up
+    cleanup_storage(&app.service_state.service_storage)
         .await
-        .unwrap();
+        .expect("Failed to clean up storage.");
 }

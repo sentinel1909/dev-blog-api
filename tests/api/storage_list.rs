@@ -1,8 +1,8 @@
 // tests/api/storage_list.rs
 
 // dependencies
-use crate::helpers::{create_db, create_storage, migrate_db, spawn_app};
-use serde_json::{json, Value};
+use crate::helpers::{cleanup_storage, create_db, create_storage, setup_test_files, spawn_app};
+use serde_json::Value;
 
 #[tokio::test]
 async fn storage_list_returns_200_ok_and_bucket_contents() {
@@ -14,9 +14,9 @@ async fn storage_list_returns_200_ok_and_bucket_contents() {
         .await
         .expect("Unable to create local storage directory for testing.");
     let app = spawn_app(db, op).await;
-    migrate_db(&app.service_state)
+    setup_test_files(&app.service_state.service_storage)
         .await
-        .expect("Unable to perform migrations on the test database.");
+        .expect("Unable to set up test files.");
 
     // Act
     let response = app
@@ -32,9 +32,19 @@ async fn storage_list_returns_200_ok_and_bucket_contents() {
         .json()
         .await
         .expect("Failed to parse JSON from response body.");
-    let expected_body = json!({
-      "status": "ok",
-      "content": ["content/test2.md", "content/test1.md", "content/"],
-    });
-    assert_eq!(response_body, expected_body);
+
+    assert_eq!(response_body["status"], "ok");
+    assert!(response_body["content"]
+        .as_array()
+        .unwrap()
+        .contains(&"content/test1.md".into()));
+    assert!(response_body["content"]
+        .as_array()
+        .unwrap()
+        .contains(&"content/test2.md".into()));
+
+    // Clean up
+    cleanup_storage(&app.service_state.service_storage)
+        .await
+        .expect("Failed to clean up storage.");
 }

@@ -7,9 +7,11 @@ use libsql::{Builder, Database, Error};
 use opendal::services::Fs;
 use opendal::Operator;
 use reqwest::Client;
+use std::fs;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tokio::sync::Notify;
+use uuid::Uuid;
 
 // struct type which models a test application
 #[allow(dead_code)]
@@ -38,10 +40,30 @@ pub async fn migrate_db(state: &ServiceState) -> Result<(), Error> {
 
 // helper function to create local storage for testing
 pub async fn create_storage() -> Result<Operator, opendal::Error> {
-    let builder = Fs::default().root("dev_blog_testing");
+    let unique_dir = format!("dev_blog_testing_{}", Uuid::new_v4());
+    let builder = Fs::default().root(&unique_dir);
     let op = Operator::new(builder).unwrap().finish();
     op.create_dir("content/").await?;
     Ok(op)
+}
+
+// helper function to setup the files for each test
+pub async fn setup_test_files(op: &Operator) -> Result<(), opendal::Error> {
+    let test1_content = include_str!("../../dev_blog_testing/upload/test1.md");
+    let test2_content = include_str!("../../dev_blog_testing/upload/test2.md");
+    op.write("content/test1.md", test1_content).await?;
+    op.write("content/test2.md", test2_content).await?;
+    Ok(())
+}
+
+// helper function to clean up storage after a test
+pub async fn cleanup_storage(op: &Operator) -> Result<(), opendal::Error> {
+    let root = op.info().root().to_string();
+    op.remove_all("content/").await?;
+    fs::remove_dir_all(&root).map_err(|_| {
+        opendal::Error::new(opendal::ErrorKind::Unexpected, "Failed to remove directory")
+    })?;
+    Ok(())
 }
 
 pub async fn spawn_app(db: Database, op: Operator) -> TestApp {
@@ -54,6 +76,11 @@ pub async fn spawn_app(db: Database, op: Operator) -> TestApp {
         service_db: Arc::new(db),
         service_storage: op,
     };
+
+    // database migrations
+    migrate_db(&state)
+        .await
+        .expect("Failed to perform migrations on the test database.");
 
     // build the app for testing
     let application =

@@ -1,7 +1,7 @@
 // tests/api/storage_check.rs
 
 // dependencies
-use crate::helpers::{create_db, create_storage, spawn_app};
+use crate::helpers::{cleanup_storage, create_db, create_storage, setup_test_files, spawn_app};
 use serde_json::{json, Value};
 
 #[tokio::test]
@@ -14,6 +14,9 @@ async fn storage_check_returns_200_ok() {
         .await
         .expect("Unable to create local storage directory for testing.");
     let app = spawn_app(db, op).await;
+    setup_test_files(&app.service_state.service_storage)
+        .await
+        .expect("Unable to set up test files.");
 
     // Act
     let response = app
@@ -33,4 +36,9 @@ async fn storage_check_returns_200_ok() {
       "status": "ok",
     });
     assert_eq!(response_body, expected_body);
+
+    // Clean up
+    cleanup_storage(&app.service_state.service_storage)
+        .await
+        .expect("Failed to clean up storage.");
 }

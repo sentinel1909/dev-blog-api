@@ -4,7 +4,7 @@
 .vscode
 
 # Build artifacts
-target
+/target
 
 # Shuttle configuration and environment variables
 .shuttle*
@@ -14,4 +14,4 @@ Secrets*.toml
 *.db
 
 # /tmp directory (for testing OpenDAL)
-/target
+/dev_blog_testing
