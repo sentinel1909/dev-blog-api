@@ -105,8 +105,7 @@ impl DevBlogApplication {
     }
 
     // function to run the application in tests
-    pub async fn run_until_stopped(self, addr: SocketAddr) {
-        let listener = TcpListener::bind(addr).await.unwrap();
+    pub async fn run_until_stopped(self, listener: TcpListener) {
         axum::serve(listener, self.0).await.unwrap();
     }
 }

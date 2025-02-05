@@ -1,7 +1,7 @@
 // tests/api/storage_check.rs
 
 // dependencies
-use crate::helpers::{create_db, create_storage, migrate_db, spawn_app};
+use crate::helpers::{create_db, create_storage, spawn_app};
 use serde_json::{json, Value};
 
 #[tokio::test]
@@ -14,9 +14,6 @@ async fn storage_check_returns_200_ok() {
         .await
         .expect("Unable to create local storage directory for testing.");
     let app = spawn_app(db, op).await;
-    migrate_db(&app.service_state)
-        .await
-        .expect("Unable to perform migrations on the test database.");
 
     // Act
     let response = app

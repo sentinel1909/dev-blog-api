@@ -7,8 +7,9 @@ use libsql::{Builder, Database, Error};
 use opendal::services::Fs;
 use opendal::Operator;
 use reqwest::Client;
-use std::net::TcpListener;
 use std::sync::Arc;
+use tokio::net::TcpListener;
+use tokio::sync::Notify;
 
 // struct type which models a test application
 #[allow(dead_code)]
@@ -57,12 +58,24 @@ pub async fn spawn_app(db: Database, op: Operator) -> TestApp {
     // build the app for testing
     let application =
         DevBlogApplication::build(state.clone()).expect("Failed to build the application.");
-    let listener = TcpListener::bind("localhost:0").expect("Failed to bind port.");
+    let listener = TcpListener::bind("localhost:0")
+        .await
+        .expect("Failed to bind port.");
     let addr = listener.local_addr().unwrap();
     let port = addr.port();
 
-    // run the app
-    tokio::spawn(application.run_until_stopped(addr));
+    {
+        // run the app
+        let server_started = Arc::new(Notify::new());
+        tokio::spawn({
+            let server_started = Arc::clone(&server_started);
+            async move {
+                server_started.notify_one();
+                application.run_until_stopped(listener).await;
+            }
+        });
+        server_started.notified().await;
+    }
 
     // configure the base, empty API client for testing
     let client = Client::builder()

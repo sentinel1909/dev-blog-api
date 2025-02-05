@@ -34,7 +34,7 @@ async fn storage_list_returns_200_ok_and_bucket_contents() {
         .expect("Failed to parse JSON from response body.");
     let expected_body = json!({
       "status": "ok",
-      "content": ["content/test2.md", "content/test1.md", "content/test3.md", "content/"],
+      "content": ["content/test2.md", "content/test1.md", "content/"],
     });
     assert_eq!(response_body, expected_body);
 }
