@@ -13,5 +13,8 @@ Secrets*.toml
 # Local SQLite database
 *.db
 
+# Content folder
+/content
+
 # /dev_blog_testing directory (for testing OpenDAL)
 /dev_blog_testing
